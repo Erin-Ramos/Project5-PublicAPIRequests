@@ -3,16 +3,19 @@ const apiUrl = 'https://randomuser.me/api/?results=12&inc=name,email,location,pi
 const gallery = document.querySelector('.gallery');
 let employees = [];
 
-// INITIAL DISPLAY STUFF 
+// INITIAL DISPLAY
 async function getEmployees() {
+    // get the data and display it
     fetch(apiUrl)
         .then(response => response.json())
         .then(data => displayEmployees(data.results))
 }
 
 function displayEmployees(data) {
+    // input data into usable array
     employees = data;
 
+    // iterate over the array objects and prepare the HTML
     data.forEach((employee) => {
         employeeHtml = `
         <div class="card">
@@ -26,13 +29,48 @@ function displayEmployees(data) {
             </div>
         </div>
         `;
+        // add the cards to the page
         gallery.insertAdjacentHTML('beforeend', employeeHtml)
     });
 }
 
 getEmployees();
 
-// MODAL STUFF
+// MODAL 
+function displayModal(card) {
+    const bday = new Date(card.dob.date);
+
+    // prepare modal HTML
+    let modalHTML = `
+    <div class="modal-container">
+    <div class="modal">
+        <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
+        <div class="modal-info-container">
+            <img class="modal-img" src="${card.picture.medium}" alt="profile picture">
+            <h3 id="name" class="modal-name cap">${card.name.first} ${card.name.last}</h3>
+            <p class="modal-text">${card.email}</p>
+            <p class="modal-text cap">${card.location.city}</p>
+            <hr>
+            <p class="modal-text">${card.cell}</p>
+            <p class="modal-text">${card.location.street.number} ${card.location.street.name}., 
+                ${card.location.city}, ${card.location.state} ${card.location.postcode}</p>
+            <p class="modal-text">Birthday: ${bday.getMonth() + 1}/${bday.getDate()}/${bday.getFullYear()}</p>
+        </div>
+    </div>
+    `;
+
+    // add the modal card to the page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const closeButton = document.querySelector('.modal-close-btn');
+    const modalContainer = document.querySelector('.modal-container');
+
+    // close the modal window when the x is clicked
+    closeButton.addEventListener('click', () => {
+        modalContainer.remove();
+    });
+};
+
 
 gallery.addEventListener('click', (e) => {
     if (e.target.closest('.card')) {
@@ -40,39 +78,14 @@ gallery.addEventListener('click', (e) => {
         .querySelector('.card-info-container')
         .querySelector('#name')
         .textContent;
-        
-        displayModal(employeeCard);
+
+        // define which card was clicked
+        function wasClicked(card) {
+            const fullName = `${card.name.first} ${card.name.last}` 
+            return fullName === employeeCard;
+        }
+
+        // display the modal window for the clicked employee card
+        displayModal(employees.find(wasClicked));
     }
 });
-
-function displayModal(card) {
-    console.log(card);
-    let {
-        name,
-        dob,
-        phone,
-        email,
-        location: { city, street, state, postcode },
-        picture
-    } = employees[card];
-
-    let date = new Date(dob.date);
-
-    let modalHTML = `
-    <div class="modal-container">
-        <div class="modal">
-        <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
-            <div class="modal-info-container">
-                <img class="modal-img" src="${picture.large}" alt="profile picture">
-                <h3 id="name" class="modal-name cap">${name.first} ${name.last}</h3>
-                <p class="modal-text">${email}</p>
-                <p class="modal-text cap">${city}, ${state}</p>
-                <hr>
-                <p class="modal-text">${phone}</p>
-                <p class="modal-text">${street}, ${state}, ${postcode}</p>
-                <p class="modal-text">Birthday: ${date.getMonth()}/${date.getDate()}/${date.getFullYear()}</p>
-            </div>
-        </div>
-    </div>
-    `;
-}
